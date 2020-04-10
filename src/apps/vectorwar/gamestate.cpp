@@ -1,4 +1,3 @@
-#include <windows.h>
 #include <stdio.h>
 #include <math.h>
 #include "vectorwar.h"
@@ -27,15 +26,20 @@ distance(Position *lhs, Position *rhs)
  */
 
 void
-GameState::Init(HWND hwnd, int num_players)
+GameState::Init(SDL_Renderer* renderer, int num_players)
 {
    int i, w, h, r;
 
-   GetClientRect(hwnd, &_bounds);
-   InflateRect(&_bounds, -8, -8);
+   if (SDL_GetDisplayBounds(0, &_bounds) != 0) {
+      SDL_Log("SDL_GetDisplayBounds failed: %s", SDL_GetError());
+      exit(1);
+   }
 
-   w = _bounds.right - _bounds.left;
-   h = _bounds.bottom - _bounds.top;
+   // GetClientRect(hwnd, &_bounds);
+   // InflateRect(&_bounds, -8, -8);
+
+   w = _bounds.w;
+   h = _bounds.h;
    r = h / 4;
 
    _framenumber = 0;
@@ -55,7 +59,7 @@ GameState::Init(HWND hwnd, int num_players)
       _ships[i].radius = SHIP_RADIUS;
    }
 
-   InflateRect(&_bounds, -8, -8);
+   // InflateRect(&_bounds, -8, -8);
 }
 
 void GameState::GetShipAI(int i, double *heading, double *thrust, int *fire)
@@ -135,13 +139,13 @@ void GameState::MoveShip(int i, double heading, double thrust, int fire)
    ship->position.y += ship->velocity.dy;
    ggpo_log(ggpo, "new ship position: (dx:%.4f dy:%2.f).\n", ship->position.x, ship->position.y);
 
-   if (ship->position.x - ship->radius < _bounds.left || 
-       ship->position.x + ship->radius > _bounds.right) {
+   if (ship->position.x - ship->radius < _bounds.x ||
+       ship->position.x + ship->radius > _bounds.x + _bounds.w) {
       ship->velocity.dx *= -1;
       ship->position.x += (ship->velocity.dx * 2);
    }
-   if (ship->position.y - ship->radius < _bounds.top || 
-       ship->position.y + ship->radius > _bounds.bottom) {
+   if (ship->position.y - ship->radius < _bounds.y ||
+       ship->position.y + ship->radius > _bounds.y + _bounds.h) {
       ship->velocity.dy *= -1;
       ship->position.y += (ship->velocity.dy * 2);
    }
@@ -150,10 +154,10 @@ void GameState::MoveShip(int i, double heading, double thrust, int fire)
       if (bullet->active) {
          bullet->position.x += bullet->velocity.dx;
          bullet->position.y += bullet->velocity.dy;
-         if (bullet->position.x < _bounds.left ||
-             bullet->position.y < _bounds.top ||
-             bullet->position.x > _bounds.right ||
-             bullet->position.y > _bounds.bottom) {
+         if (bullet->position.x < _bounds.x ||
+            bullet->position.y < _bounds.y ||
+            bullet->position.x > _bounds.x + _bounds.w ||
+            bullet->position.y > _bounds.y + _bounds.h) {
             bullet->active = false;
          } else {
             for (int j = 0; j < _num_ships; j++) {
