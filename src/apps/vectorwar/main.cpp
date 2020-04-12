@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
       return 1;
    }
    int offset = 1, local_player = 0;
-   wchar_t wide_ip_buffer[128];
+   //char ip_buffer[128];
 
    SDL_Point window_offsets[] = {
       { 64,  64 },   // player 1
@@ -108,12 +108,11 @@ int main(int argc, char* argv[])
    if (strcmp(argv[offset], "spectate") == 0) {
       char host_ip[128];
       int host_port;
-      if (sscanf(argv[offset+1], "%[^:]:%d", wide_ip_buffer, &host_port) != 2) {
+      if (sscanf(argv[offset+1], "%[^:]:%d", host_ip, &host_port) != 2) {
          Syntax();
          return 1;
       }
 
-      wcstombs(host_ip, wide_ip_buffer, sizeof(host_ip));
       VectorWar_InitSpectator(renderer, local_port, num_players, host_ip, host_port);
    } else {
       GGPOPlayer players[GGPO_MAX_SPECTATORS + GGPO_MAX_PLAYERS];
@@ -131,22 +130,20 @@ int main(int argc, char* argv[])
          }
          
          players[i].type = GGPO_PLAYERTYPE_REMOTE;
-         if (sscanf(arg, "%[^:]:%hd", wide_ip_buffer, &players[i].u.remote.port) != 2) {
+         if (sscanf(arg, "%[^:]:%hd", players[i].u.remote.ip_address, &players[i].u.remote.port) != 2) {
             Syntax();
             return 1;
          }
-         wcstombs(players[i].u.remote.ip_address, wide_ip_buffer, sizeof(players[i].u.remote.ip_address));
       }
 
       // these are spectators...
       num_spectators = 0;
       while (offset < argc) {
          players[i].type = GGPO_PLAYERTYPE_SPECTATOR;
-         if (sscanf(argv[offset++], "%[^:]:%hd", wide_ip_buffer, &players[i].u.remote.port) != 2) {
+         if (sscanf(argv[offset++], "%[^:]:%hd", players[i].u.remote.ip_address, &players[i].u.remote.port) != 2) {
             Syntax();
             return 1;
          }
-         wcstombs(players[i].u.remote.ip_address, wide_ip_buffer, sizeof(players[i].u.remote.ip_address));
          i++;
          num_spectators++;
       }
