@@ -90,11 +90,6 @@ SDLRenderer::Draw(GameState &gs, NonGameState &ngs)
 		 print_SDL_error("SDL_RenderClear");
    }
 
-   ret = SDL_SetRenderDrawColor(_rend, 255, 255, 255 , SDL_ALPHA_OPAQUE);
-   if (ret) {
-		 print_SDL_error("SDL_SetRenderDrawColor white");
-   }
-
    // FillRect(hdc, &_rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
    // FrameRect(hdc, &gs._bounds, (HBRUSH)GetStockObject(WHITE_BRUSH));
 
@@ -104,6 +99,14 @@ SDLRenderer::Draw(GameState &gs, NonGameState &ngs)
    for (int i = 0; i < gs._num_ships; i++) {
       // SetTextColor(hdc, _shipColors[i]);
       // SelectObject(hdc, _shipPens[i]);
+
+      RGB color = _shipColors[i];
+      int ret = SDL_SetRenderDrawColor(_rend, color.r, color.g, color.b,
+           SDL_ALPHA_OPAQUE);
+      if (ret) {
+        print_SDL_error("SDL_SetRenderDrawColor shipcolor");
+      }
+
       DrawShip(i, gs);
       DrawConnectState(gs._ships[i], ngs.players[i], _shipColors[i]);
    }
@@ -162,6 +165,7 @@ SDLRenderer::DrawShip(int which, GameState &gs)
       { gs._bounds.x  + 2, gs._bounds.y + gs._bounds.h - 2 },
       { gs._bounds.x + gs._bounds.w - 2, gs._bounds.y + gs._bounds.h - 2 },
    };
+
    char buf[32];
    int i;
 
