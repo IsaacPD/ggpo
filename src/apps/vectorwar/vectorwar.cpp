@@ -399,19 +399,20 @@ ReadInputs()
    // 
    // return inputs;
 
+   int inputs = 0;
    SDL_Event event;
 
-   while (SDL_WaitEvent(&event) >= 0) {
+   while (SDL_PollEvent(&event) >= 0) {
       if (event.type != SDL_KEYDOWN) {
-         continue;
+         break;
       }
 
       switch (event.key.keysym.sym) {
          case SDLK_ESCAPE:
          case SDLK_q:
-           // VectorWar_Exit();
            // ???
            // VectorWar_Init(hwnd, local_port, num_players, players, num_spectators);
+           // VectorWar_Exit();
            exit(0);
            break;
 
@@ -419,7 +420,27 @@ ReadInputs()
                // ggpoutil_perfmon_toggle();
            break;
 
+         case SDLK_d:
+           inputs |= INPUT_FIRE;
+           break;
+         case SDLK_s:
+           inputs |= INPUT_BOMB;
+           break;
+         case SDLK_UP:
+           inputs |= INPUT_THRUST;
+           break;
+         case SDLK_DOWN:
+            inputs |= INPUT_BREAK;
+           break;
+         case SDLK_LEFT:
+            inputs |= INPUT_ROTATE_LEFT;
+           break;
+         case SDLK_RIGHT:
+            inputs |= INPUT_ROTATE_RIGHT;
+           break;
+
          //case WM_PAINT:
+         // TODO
          //  VectorWar_DrawCurrentFrame();
          //  ValidateRect(hwnd, NULL);
          //  return 0;
@@ -435,8 +456,7 @@ ReadInputs()
       VectorWar_DisconnectPlayer(1);
    }
 
-   return 0;
-
+   return inputs;
 }
 
 /*
@@ -450,26 +470,31 @@ VectorWar_RunFrame()
   GGPOErrorCode result = GGPO_OK;
   int disconnect_flags;
   int inputs[MAX_SHIPS] = { 0 };
+  int input = 0;
 
   if (ngs.local_player_handle != GGPO_INVALID_HANDLE) {
-     int input = ReadInputs();
+     input = ReadInputs();
 #if defined(SYNC_TEST)
      input = rand(); // test: use random inputs to demonstrate sync testing
 #endif
      result = ggpo_add_local_input(ggpo, ngs.local_player_handle, &input, sizeof(input));
   }
 
-   // synchronize these inputs with ggpo.  If we have enough input to proceed
-   // ggpo will modify the input list with the correct inputs to use and
-   // return 1.
+  inputs[0] = input;
+
+  // synchronize these inputs with ggpo.  If we have enough input to proceed
+  // ggpo will modify the input list with the correct inputs to use and
+  // return 1.
   if (GGPO_SUCCEEDED(result)) {
      result = ggpo_synchronize_input(ggpo, (void *)inputs, sizeof(int) * MAX_SHIPS, &disconnect_flags);
      if (GGPO_SUCCEEDED(result)) {
+         printf("ggpo succeeded\n");
          // inputs[0] and inputs[1] contain the inputs for p1 and p2.  Advance
          // the game by 1 frame using those inputs.
          VectorWar_AdvanceFrame(inputs, disconnect_flags);
      }
   }
+
   VectorWar_DrawCurrentFrame();
 }
 
