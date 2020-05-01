@@ -19,8 +19,11 @@ typedef struct RGB {
 
 class SDLRenderer : public Renderer {
 public:
-   SDLRenderer(SDL_Renderer* renderer);
+   SDLRenderer();
    ~SDLRenderer();
+
+   int WindowWidth();
+   int WindowHeight();
 
    virtual void Draw(GameState &gs, NonGameState &ngs);
    virtual void SetStatusText(const char *text);
@@ -33,6 +36,7 @@ protected:
 
    // HFONT          _font;
    SDL_Renderer   *_rend;
+   SDL_Window     *_win;
    SDL_Rect       _rc;
    char           _status[1024];
    RGB            _shipColors[4];

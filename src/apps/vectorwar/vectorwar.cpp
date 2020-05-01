@@ -209,15 +209,15 @@ vw_free_buffer(void *buffer)
  * the video renderer and creates a new network session.
  */
 void
-VectorWar_Init(SDL_Renderer* renderer, int localport, int num_players, GGPOPlayer *players, int num_spectators)
+VectorWar_Init(int localport, int num_players, GGPOPlayer *players, int num_spectators)
 {
    GGPOErrorCode result;
 
-   // initialize blobal
-   local_rend = new SDLRenderer(renderer);
+   // initialize global
+   local_rend = new SDLRenderer;
 
    // Initialize the game state
-   gs.Init(renderer, num_players);
+   gs.Init(num_players, local_rend->WindowWidth(), local_rend->WindowHeight());
    ngs.num_players = num_players;
 
    // Fill in a ggpo callbacks structure to pass to start_session.
@@ -268,12 +268,15 @@ VectorWar_Init(SDL_Renderer* renderer, int localport, int num_players, GGPOPlaye
  * Create a new spectator session
  */
 void
-VectorWar_InitSpectator(SDL_Renderer* renderer, int localport, int num_players, char *host_ip, int host_port)
+VectorWar_InitSpectator(int localport, int num_players, char *host_ip, int host_port)
 {
    GGPOErrorCode result;
 
+   // initialize global
+   local_rend = new SDLRenderer;
+
    // Initialize the game state
-   gs.Init(renderer, num_players);
+   gs.Init(num_players, local_rend->WindowWidth(), local_rend->WindowHeight());
    ngs.num_players = num_players;
 
    // Fill in a ggpo callbacks structure to pass to start_session.
@@ -442,7 +445,7 @@ ReadInputs()
  * Run a single frame of the game.
  */
 void
-VectorWar_RunFrame(SDL_Renderer* renderer)
+VectorWar_RunFrame()
 {
   GGPOErrorCode result = GGPO_OK;
   int disconnect_flags;
@@ -483,7 +486,7 @@ VectorWar_Idle(int time)
 }
 
 void
-VectorWar_Exit(SDL_Window* window, SDL_Renderer* renderer)
+VectorWar_Exit()
 {
    memset(&gs, 0, sizeof(gs));
    memset(&ngs, 0, sizeof(ngs));
@@ -492,8 +495,4 @@ VectorWar_Exit(SDL_Window* window, SDL_Renderer* renderer)
       ggpo_close_session(ggpo);
       ggpo = NULL;
    }
-
-   SDL_DestroyWindow(window);
-   SDL_DestroyRenderer(renderer);
-   SDL_Quit();
 }

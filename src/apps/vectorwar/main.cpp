@@ -4,36 +4,15 @@
 #if defined(_DEBUG)
 #   include <crtdbg.h>
 #endif
-#include "SDL2/SDL.h"
 #include "vectorwar.h"
+
 // #include "ggpo_perfmon.h"
 
 int local_port, num_players, num_spectators;
 GGPOPlayer *players;
 
-SDL_Window*
-CreateMainWindow()
-{
-   SDL_Window *window;
-
-   char titlebuf[128];
-   snprintf(titlebuf, strlen(titlebuf),
-      "(pid: %d) ggpo sdk sample: vector war", GetProcessID());
-
-   window = SDL_CreateWindow(
-       titlebuf,
-       SDL_WINDOWPOS_UNDEFINED,           // initial x position
-       SDL_WINDOWPOS_UNDEFINED,           // initial y position
-       640,                               // width, in pixels
-       480,                               // height, in pixels
-       SDL_WINDOW_SHOWN
-   );
-
-   return window;
-}
-
 void
-RunMainLoop(SDL_Renderer* rend)
+RunMainLoop()
 {
    uint32_t start, next, now;
 
@@ -42,7 +21,7 @@ RunMainLoop(SDL_Renderer* rend)
       now = GetCurrentTimeMS();
       VectorWar_Idle(std::max((uint32_t)0, next - now - 1));
       if (now >= next) {
-         VectorWar_RunFrame(rend);
+         VectorWar_RunFrame();
          next = now + (1000 / 60);
       }
    }
@@ -57,24 +36,12 @@ Syntax()
 
 int main(int argc, char* argv[])
 {
-   int ret = SDL_Init(SDL_INIT_VIDEO);
-   if (ret) {
-      fprintf( stderr, "Error (SDL): could not initialise SDL: %s\n",
-         SDL_GetError());
-      exit(1);
-   }
-
 	 char* locale = setlocale(LC_ALL, "");
 	 if (!locale) {
 		 printf("could not set locale");
 		 exit(1);
 	 }
 
-   SDL_Window* window = CreateMainWindow();
-
-   // initialise the first available renderer
-   SDL_Renderer* renderer = SDL_CreateRenderer(window, -1,
-      SDL_RENDERER_ACCELERATED);
 
 #if defined(WIN32)
    WSADATA wd = { 0 };
@@ -113,7 +80,7 @@ int main(int argc, char* argv[])
          return 1;
       }
 
-      VectorWar_InitSpectator(renderer, local_port, num_players, host_ip, host_port);
+      VectorWar_InitSpectator(local_port, num_players, host_ip, host_port);
    } else {
       GGPOPlayer players[GGPO_MAX_SPECTATORS + GGPO_MAX_PLAYERS];
 
@@ -152,11 +119,11 @@ int main(int argc, char* argv[])
          // ::SetWindowPos(hwnd, NULL, window_offsets[local_player].x, window_offsets[local_player].y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
       }
 
-      VectorWar_Init(renderer, local_port, num_players, players, num_spectators);
+      VectorWar_Init(local_port, num_players, players, num_spectators);
    }
 
-   RunMainLoop(renderer);
-   VectorWar_Exit(window, renderer);
+   RunMainLoop();
+   VectorWar_Exit();
 #if defined(WIN32)
    WSACleanup();
 #endif

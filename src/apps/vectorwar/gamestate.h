@@ -54,7 +54,7 @@ struct Ship {
 };
 
 struct GameState {
-   void Init(SDL_Renderer* renderer,int num_players);
+   void Init(int num_players, int width, int height);
    void GetShipAI(int i, double *heading, double *thrust, int *fire);
    void ParseShipInputs(int inputs, int i, double *heading, double *thrust, int *fire);
    void MoveShip(int i, double heading, double thrust, int fire);

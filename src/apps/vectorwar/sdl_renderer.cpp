@@ -11,20 +11,52 @@
 #define  PROGRESS_BAR_HEIGHT         8
 #define  PROGRESS_TEXT_OFFSET       (PROGRESS_BAR_TOP_OFFSET + PROGRESS_BAR_HEIGHT + 4)
 
-SDLRenderer::SDLRenderer(SDL_Renderer* renderer) :
-   _rend(renderer)
+SDL_Window*
+CreateMainWindow()
+{
+   SDL_Window *window;
+
+   char titlebuf[128];
+   snprintf(titlebuf, strlen(titlebuf),
+      "(pid: %d) ggpo sdk sample: vector war", GetProcessID());
+
+   window = SDL_CreateWindow(
+       titlebuf,
+       SDL_WINDOWPOS_UNDEFINED,           // initial x position
+       SDL_WINDOWPOS_UNDEFINED,           // initial y position
+       640,                               // width, in pixels
+       480,                               // height, in pixels
+       SDL_WINDOW_SHOWN
+   );
+
+   return window;
+}
+
+
+SDLRenderer::SDLRenderer()
 {
    // HDC hdc = GetDC(_hwnd);
    // GetClientRect(hwnd, &_rc);
    // CreateGDIFont(hdc);
    // ReleaseDC(_hwnd, hdc);
 
-   *_status = '\0';
-
-   if (SDL_GetDisplayBounds(0, &_rc) != 0) {
-      SDL_Log("SDL_GetDisplayBounds n SDLRenderer failed: %s", SDL_GetError());
+   int ret = SDL_Init(SDL_INIT_VIDEO);
+   if (ret) {
+      fprintf( stderr, "Error (SDL): could not initialise SDL: %s\n",
+         SDL_GetError());
       exit(1);
    }
+
+   SDL_Window* window = CreateMainWindow();
+
+   // initialise the first available renderer
+   _rend = SDL_CreateRenderer(window, -1,
+      SDL_RENDERER_ACCELERATED);
+
+   *_status = '\0';
+
+   SDL_GetWindowSize(window, &_rc.w, &_rc.h);
+
    _shipColors[0] = ((RGB) {255, 0, 0});
    _shipColors[1] = ((RGB) {0, 255, 0});
    _shipColors[2] = ((RGB) {0, 0, 255});
@@ -34,18 +66,34 @@ SDLRenderer::SDLRenderer(SDL_Renderer* renderer) :
 
 SDLRenderer::~SDLRenderer()
 {
-   //DeleteObject(_font);
+   SDL_DestroyWindow(_win);
+   SDL_DestroyRenderer(_rend);
+   SDL_Quit();
 }
 
+void print_SDL_error(const char* loc)
+{
+	printf("SDL Error (%s): %s\n", loc, SDL_GetError());
+}
 
 void
 SDLRenderer::Draw(GameState &gs, NonGameState &ngs)
 {
-   SDL_RenderClear(_rend);
+   int ret = SDL_SetRenderDrawColor(_rend, 0, 0, 0 , SDL_ALPHA_OPAQUE);
+   if (ret) {
+		 print_SDL_error("SDL_SetRenderDrawColor");
+   }
 
-   SDL_SetRenderDrawColor(_rend, 0, 0, 0 , SDL_ALPHA_OPAQUE);
-   SDL_RenderFillRect(_rend, &_rc);
-   SDL_RenderDrawRect(_rend, &_rc);
+   // render clear actually uses the draw coor
+   ret = SDL_RenderClear(_rend);
+   if (ret) {
+		 print_SDL_error("SDL_RenderClear");
+   }
+
+   ret = SDL_SetRenderDrawColor(_rend, 255, 255, 255 , SDL_ALPHA_OPAQUE);
+   if (ret) {
+		 print_SDL_error("SDL_SetRenderDrawColor white");
+   }
 
    // FillRect(hdc, &_rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
    // FrameRect(hdc, &gs._bounds, (HBRUSH)GetStockObject(WHITE_BRUSH));
@@ -179,7 +227,7 @@ SDLRenderer::DrawConnectState(Ship& ship, PlayerConnectionInfo &info, RGB color)
    //   TextOutA(hdc, ship.position.x, ship.position.y + PROGRESS_TEXT_OFFSET, status, strlen(status));
    //}
    if (progress >= 0) {
-			SDL_SetRenderDrawColor(_rend, 0, 0, 0, SDL_ALPHA_OPAQUE);
+      // SDL_SetRenderDrawColor(_rend, 0, 0, 0, SDL_ALPHA_OPAQUE);
       SDL_Rect rc = { ship.position.x - (PROGRESS_BAR_WIDTH / 2),
                       ship.position.y + PROGRESS_BAR_TOP_OFFSET,
                       PROGRESS_BAR_WIDTH / 2,
@@ -190,6 +238,18 @@ SDLRenderer::DrawConnectState(Ship& ship, PlayerConnectionInfo &info, RGB color)
       //InflateRect(&rc, -1, -1);
       SDL_RenderFillRect(_rend, &rc);
    }
+}
+
+int
+SDLRenderer::WindowWidth()
+{
+   return _rc.w;
+}
+
+int
+SDLRenderer::WindowHeight()
+{
+   return _rc.h;
 }
 
 

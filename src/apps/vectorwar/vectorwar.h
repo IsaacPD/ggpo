@@ -23,14 +23,14 @@ enum VectorWarInputs {
    INPUT_BOMB              = (1 << 5),
 };
 
-void VectorWar_Init(SDL_Renderer* renderer, int localport, int num_players, GGPOPlayer *players, int num_spectators);
-void VectorWar_InitSpectator(SDL_Renderer* renderer, int localport, int num_players, char *host_ip, int host_port);
+void VectorWar_Init(int localport, int num_players, GGPOPlayer *players, int num_spectators);
+void VectorWar_InitSpectator(int localport, int num_players, char *host_ip, int host_port);
 void VectorWar_DrawCurrentFrame();
 void VectorWar_AdvanceFrame(int inputs[], int disconnect_flags);
-void VectorWar_RunFrame(SDL_Renderer* renderer);
+void VectorWar_RunFrame();
 void VectorWar_Idle(int time);
 void VectorWar_DisconnectPlayer(int player);
-void VectorWar_Exit(SDL_Window* win, SDL_Renderer* renderer);
+void VectorWar_Exit();
 
 #define ARRAY_SIZE(n)      (sizeof(n) / sizeof(n[0]))
 #define FRAME_DELAY        2

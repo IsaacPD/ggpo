@@ -26,21 +26,19 @@ distance(Position *lhs, Position *rhs)
  */
 
 void
-GameState::Init(SDL_Renderer* renderer, int num_players)
+GameState::Init(int num_players, int width, int height)
 {
-   int i, w, h, r;
+   int i, r;
 
-   if (SDL_GetDisplayBounds(0, &_bounds) != 0) {
-      SDL_Log("SDL_GetDisplayBounds failed: %s", SDL_GetError());
-      exit(1);
-   }
+	 _bounds.w = width;
+	 _bounds.h = height;
+
+	 printf("window , w: %d, h: %d\n", _bounds.w, _bounds.h);
 
    // GetClientRect(hwnd, &_bounds);
    // InflateRect(&_bounds, -8, -8);
 
-   w = _bounds.w;
-   h = _bounds.h;
-   r = h / 4;
+   r = height / 4;
 
    _framenumber = 0;
    _num_ships = num_players;
@@ -52,8 +50,8 @@ GameState::Init(SDL_Renderer* renderer, int num_players)
       cost = ::cos(theta);
       sint = ::sin(theta);
 
-      _ships[i].position.x = (w / 2) + r * cost;
-      _ships[i].position.y = (h / 2) + r * sint;
+      _ships[i].position.x = (width / 2) + r * cost;
+      _ships[i].position.y = (height / 2) + r * sint;
       _ships[i].heading = (heading + 180) % 360;
       _ships[i].health = STARTING_HEALTH;
       _ships[i].radius = SHIP_RADIUS;
