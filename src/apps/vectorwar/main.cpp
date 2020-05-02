@@ -15,13 +15,14 @@ void
 RunMainLoop()
 {
    uint32_t start, next, now;
+   int input = 0;
 
    start = next = now = GetCurrentTimeMS();
    while (1) {
       now = GetCurrentTimeMS();
       VectorWar_Idle(std::max((uint32_t)0, next - now - 1));
       if (now >= next) {
-         VectorWar_RunFrame();
+         input = VectorWar_RunFrame(input);
          next = now + (1000 / 60);
       }
    }

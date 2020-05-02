@@ -201,6 +201,29 @@ vw_free_buffer(void *buffer)
    free(buffer);
 }
 
+static int
+sdl_keyboard_event_filter(void* user_data, SDL_Event* event)
+{
+   switch (event->type) {
+      case SDL_KEYDOWN:
+      case SDL_KEYUP:
+      case SDL_QUIT:
+         return 1;
+   }
+
+   return 0;
+}
+
+
+static void
+setup_SDL_library()
+{
+   // initialize global
+   local_rend = new SDLRenderer;
+
+   SDL_SetEventFilter(sdl_keyboard_event_filter,
+                      NULL);
+}
 
 /*
  * VectorWar_Init --
@@ -213,8 +236,7 @@ VectorWar_Init(int localport, int num_players, GGPOPlayer *players, int num_spec
 {
    GGPOErrorCode result;
 
-   // initialize global
-   local_rend = new SDLRenderer;
+   setup_SDL_library();
 
    // Initialize the game state
    gs.Init(num_players, local_rend->WindowWidth(), local_rend->WindowHeight());
@@ -272,8 +294,7 @@ VectorWar_InitSpectator(int localport, int num_players, char *host_ip, int host_
 {
    GGPOErrorCode result;
 
-   // initialize global
-   local_rend = new SDLRenderer;
+   setup_SDL_library();
 
    // Initialize the game state
    gs.Init(num_players, local_rend->WindowWidth(), local_rend->WindowHeight());
@@ -365,6 +386,17 @@ void VectorWar_AdvanceFrame(int inputs[], int disconnect_flags)
    // ggpoutil_perfmon_update(ggpo, handles, count);
 }
 
+static int
+key_down_applier(int input, int key)
+{
+   return input |= key;
+}
+
+static int
+key_up_applier(int input, int key)
+{
+   return input ^= key;
+}
 
 /*
  * ReadInputs --
@@ -374,80 +406,50 @@ void VectorWar_AdvanceFrame(int inputs[], int disconnect_flags)
  * transparently.
  */
 int
-ReadInputs()
+ReadInputs(int inputs)
 {
-   // static const struct {
-   //    int      key;
-   //    int      input;
-   // } inputtable[] = {
-   //    { VK_UP,       INPUT_THRUST },
-   //    { VK_DOWN,     INPUT_BREAK },
-   //    { VK_LEFT,     INPUT_ROTATE_LEFT },
-   //    { VK_RIGHT,    INPUT_ROTATE_RIGHT },
-   //    { 'D',         INPUT_FIRE },
-   //    { 'S',         INPUT_BOMB },
-   // };
-   // int i, inputs = 0;
-
-   // if (GetForegroundWindow() == hwnd) {
-   //    for (i = 0; i < sizeof(inputtable) / sizeof(inputtable[0]); i++) {
-   //       if (GetAsyncKeyState(inputtable[i].key)) {
-   //          inputs |= inputtable[i].input;
-   //       }
-   //    }
-   // }
-   // 
-   // return inputs;
-
-   int inputs = 0;
    SDL_Event event;
+   int (*button_applier)(int, int);
 
-   while (SDL_PollEvent(&event) >= 0) {
-      if (event.type != SDL_KEYDOWN) {
-         break;
-      }
+   // It looks like SDL won't give us more than one event so we don't
+   // need a loop here.
+   if (SDL_PollEvent(&event) <= 0) {
+     return inputs;
+   }
 
-      switch (event.key.keysym.sym) {
-         case SDLK_ESCAPE:
-         case SDLK_q:
-           // ???
-           // VectorWar_Init(hwnd, local_port, num_players, players, num_spectators);
-           // VectorWar_Exit();
-           exit(0);
-           break;
+   if (event.type == SDL_KEYDOWN) {
+     button_applier = key_down_applier;
+   } else if (event.type == SDL_KEYUP) {
+     button_applier = key_up_applier;
+   }
 
-         case SDLK_p:
-               // ggpoutil_perfmon_toggle();
-           break;
+   switch (event.key.keysym.sym) {
+      case SDLK_ESCAPE:
+      case SDLK_q:
+        // ???
+        // VectorWar_Init(hwnd, local_port, num_players, players, num_spectators);
+        // VectorWar_Exit();
+        exit(0);
+        break;
 
-         case SDLK_d:
-           inputs |= INPUT_FIRE;
-           break;
-         case SDLK_s:
-           inputs |= INPUT_BOMB;
-           break;
-         case SDLK_UP:
-           inputs |= INPUT_THRUST;
-           break;
-         case SDLK_DOWN:
-            inputs |= INPUT_BREAK;
-           break;
-         case SDLK_LEFT:
-            inputs |= INPUT_ROTATE_LEFT;
-           break;
-         case SDLK_RIGHT:
-            inputs |= INPUT_ROTATE_RIGHT;
-           break;
+      case SDLK_p:
+            // ggpoutil_perfmon_toggle();
+        break;
 
-         //case WM_PAINT:
-         // TODO
-         //  VectorWar_DrawCurrentFrame();
-         //  ValidateRect(hwnd, NULL);
-         //  return 0;
-         //case WM_CLOSE:
-         //  PostQuitMessage(0);
-         //  break;
-      }
+      case SDLK_d:
+        inputs = button_applier(inputs, INPUT_FIRE);
+        break;
+      case SDLK_UP:
+        inputs = button_applier(inputs, INPUT_THRUST);
+        break;
+      case SDLK_DOWN:
+         inputs = button_applier(inputs, INPUT_BREAK);
+        break;
+      case SDLK_LEFT:
+         inputs = button_applier(inputs, INPUT_ROTATE_LEFT);
+        break;
+      case SDLK_RIGHT:
+         inputs = button_applier(inputs, INPUT_ROTATE_RIGHT);
    }
 
    if (event.key.keysym.sym >= SDLK_F1 &&
@@ -464,16 +466,15 @@ ReadInputs()
  *
  * Run a single frame of the game.
  */
-void
-VectorWar_RunFrame()
+int
+VectorWar_RunFrame(int input)
 {
   GGPOErrorCode result = GGPO_OK;
   int disconnect_flags;
   int inputs[MAX_SHIPS] = { 0 };
-  int input = 0;
 
   if (ngs.local_player_handle != GGPO_INVALID_HANDLE) {
-     input = ReadInputs();
+     input = ReadInputs(input);
 #if defined(SYNC_TEST)
      input = rand(); // test: use random inputs to demonstrate sync testing
 #endif
@@ -496,6 +497,8 @@ VectorWar_RunFrame()
   }
 
   VectorWar_DrawCurrentFrame();
+
+  return input;
 }
 
 /*

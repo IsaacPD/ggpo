@@ -27,7 +27,7 @@ void VectorWar_Init(int localport, int num_players, GGPOPlayer *players, int num
 void VectorWar_InitSpectator(int localport, int num_players, char *host_ip, int host_port);
 void VectorWar_DrawCurrentFrame();
 void VectorWar_AdvanceFrame(int inputs[], int disconnect_flags);
-void VectorWar_RunFrame();
+int VectorWar_RunFrame(int input);
 void VectorWar_Idle(int time);
 void VectorWar_DisconnectPlayer(int player);
 void VectorWar_Exit();
