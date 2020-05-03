@@ -81,7 +81,7 @@ vw_on_event_callback(GGPOEvent *info)
       break;
    case GGPO_EVENTCODE_RUNNING:
       ngs.SetConnectState(Running);
-      // renderer->SetStatusText("");
+      local_rend->SetStatusText("");
       break;
    case GGPO_EVENTCODE_CONNECTION_INTERRUPTED:
       ngs.SetDisconnectTimeout(info->u.connection_interrupted.player,
@@ -281,7 +281,7 @@ VectorWar_Init(int localport, int num_players, GGPOPlayer *players, int num_spec
    }
 
    // ggpoutil_perfmon_init(hwnd);
-   // renderer->SetStatusText("Connecting to peers.");
+   local_rend->SetStatusText("Connecting to peers.");
 }
 
 /*
@@ -315,7 +315,7 @@ VectorWar_InitSpectator(int localport, int num_players, char *host_ip, int host_
 
    // ggpoutil_perfmon_init(hwnd);
 
-   // renderer->SetStatusText("Starting new spectator session");
+   local_rend->SetStatusText("Starting new spectator session");
 }
 
 
@@ -336,7 +336,7 @@ VectorWar_DisconnectPlayer(int player)
       } else {
          sprintf(logbuf, "Error while disconnecting player (err:%d).\n", result);
       }
-      // renderer->SetStatusText(logbuf);
+      local_rend->SetStatusText(logbuf);
    }
 }
 

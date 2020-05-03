@@ -35,11 +35,6 @@ CreateMainWindow()
 
 SDLRenderer::SDLRenderer()
 {
-   // HDC hdc = GetDC(_hwnd);
-   // GetClientRect(hwnd, &_rc);
-   // CreateGDIFont(hdc);
-   // ReleaseDC(_hwnd, hdc);
-
    int ret = SDL_Init(SDL_INIT_VIDEO);
    if (ret) {
       fprintf( stderr, "Error (SDL): could not initialise SDL: %s\n",
@@ -47,20 +42,29 @@ SDLRenderer::SDLRenderer()
       exit(1);
    }
 
-   SDL_Window* window = CreateMainWindow();
+   if (TTF_Init() == -1) {
+     printf("SDL TTF_Init: %s\n", TTF_GetError());
+     exit(2);
+   }
+
+	 CreateFont();
+
+   _win = CreateMainWindow();
 
    // initialise the first available renderer
-   _rend = SDL_CreateRenderer(window, -1,
+   _rend = SDL_CreateRenderer(_win, -1,
       SDL_RENDERER_ACCELERATED);
 
    *_status = '\0';
 
-   SDL_GetWindowSize(window, &_rc.w, &_rc.h);
+   SDL_GetWindowSize(_win, &_rc.w, &_rc.h);
 
-   _shipColors[0] = ((RGB) {255, 0, 0});
-   _shipColors[1] = ((RGB) {0, 255, 0});
-   _shipColors[2] = ((RGB) {0, 0, 255});
-   _shipColors[3] = ((RGB) {128, 128, 128});
+   _shipColors[0] = ((SDL_Color) {255, 0, 0});
+   _shipColors[1] = ((SDL_Color) {0, 255, 0});
+   _shipColors[2] = ((SDL_Color) {0, 0, 255});
+   _shipColors[3] = ((SDL_Color) {128, 128, 128});
+
+   _white = {255, 255, 255};
 }
 
 
@@ -68,6 +72,7 @@ SDLRenderer::~SDLRenderer()
 {
    SDL_DestroyWindow(_win);
    SDL_DestroyRenderer(_rend);
+   TTF_Quit();
    SDL_Quit();
 }
 
@@ -97,10 +102,7 @@ SDLRenderer::Draw(GameState &gs, NonGameState &ngs)
    // SelectObject(hdc, _font);
 
    for (int i = 0; i < gs._num_ships; i++) {
-      // SetTextColor(hdc, _shipColors[i]);
-      // SelectObject(hdc, _shipPens[i]);
-
-      RGB color = _shipColors[i];
+      SDL_Color color = _shipColors[i];
       int ret = SDL_SetRenderDrawColor(_rend, color.r, color.g, color.b,
            SDL_ALPHA_OPAQUE);
       if (ret) {
@@ -108,30 +110,72 @@ SDLRenderer::Draw(GameState &gs, NonGameState &ngs)
       }
 
       DrawShip(i, gs);
-      DrawConnectState(gs._ships[i], ngs.players[i], _shipColors[i]);
+      DrawConnectState(gs._ships[i], ngs.players[i], &_shipColors[i]);
    }
 
    //SetTextAlign(hdc, TA_BOTTOM | TA_CENTER);
    //TextOutA(hdc, _rc.h / 2, _rc.y + _rc.h - 32, _status, strlen(_status));
 
-   //SetTextColor(hdc,((RGB) {192, 192, 192}));
-   //RenderChecksum(hdc, 40, ngs.periodic);
-   //SetTextColor(hdc, ((RGB) {128, 128, 128}));
-   //RenderChecksum(hdc, 56, ngs.now);
+   SDL_Rect dst = {
+     // more or less centered
+     .x = (_rc.w / 2) - 80,
+     .y = _rc.h - 32,
+   };
+   DrawText(_status, &dst, &_white);
 
-   //SwapBuffers(hdc);
+   SDL_Color col = {192, 192, 192};
+   RenderChecksum(40, ngs.periodic, &col);
+
+   col = {128, 128, 128};
+   RenderChecksum(56, ngs.now, &col);
 
    SDL_RenderPresent(_rend);
-
-   // ReleaseDC(_hwnd, hdc);
 }
 
 void
-SDLRenderer::RenderChecksum(int y, NonGameState::ChecksumInfo &info)
+SDLRenderer::DrawText(char* text, SDL_Rect* dst, SDL_Color* color)
+{
+  if (!text) {
+    return;
+  }
+  if (strlen(text) == 0) {
+    return;
+  }
+
+  int ret = TTF_SizeUTF8(_font, text, &dst->w, &dst->h);
+  if (ret) {
+    printf("TTF_SizeUTF8: %s\n", TTF_GetError());
+    exit(1);
+  }
+
+  SDL_Surface* text_surface = TTF_RenderUTF8_Solid(_font, text, *color);
+  if (!text_surface) {
+    printf("TTF_RenderUTF8_Solid: %s\n", TTF_GetError());
+    exit(1);
+  }
+
+  SDL_Texture* texture = SDL_CreateTextureFromSurface(_rend, text_surface);
+  ret = SDL_RenderCopy(_rend, texture, NULL, dst);
+  if (ret) {
+    printf("SDL_RenderCopy: %s\n", TTF_GetError());
+    exit(1);
+  }
+
+  SDL_DestroyTexture(texture);
+  SDL_FreeSurface(text_surface);
+}
+
+void
+SDLRenderer::RenderChecksum(int y, NonGameState::ChecksumInfo &info, SDL_Color* color)
 {
    char checksum[128];
    sprintf(checksum, "Frame: %04d  Checksum: %08x", info.framenumber, info.checksum);
-   // TextOutA(hdc, _rc.w / 2, _rc.y + y, checksum, strlen(checksum));
+   SDL_Rect dst = {
+     // about centered
+     .x = (_rc.w / 2) - 120,
+     .y = y,
+   };
+   DrawText(checksum, &dst, color);
 }
 
 
@@ -145,7 +189,10 @@ void
 SDLRenderer::DrawShip(int which, GameState &gs)
 {
    Ship *ship = gs._ships + which;
-   SDL_Rect bullet = { 0 };
+   SDL_Rect bullet = {
+     .w = 1,
+     .h = 1,
+   };
    SDL_Point shape[] = {
       { SHIP_RADIUS,           0 },
       { -SHIP_RADIUS,          SHIP_WIDTH },
@@ -153,13 +200,13 @@ SDLRenderer::DrawShip(int which, GameState &gs)
       { -SHIP_RADIUS,          -SHIP_WIDTH },
       { SHIP_RADIUS,           0 },
    };
-   // int alignments[] = {
-   //    TA_TOP | TA_LEFT,
-   //    TA_TOP | TA_RIGHT,
-   //    TA_BOTTOM | TA_LEFT,
-   //    TA_BOTTOM | TA_RIGHT,
-   // };
-   SDL_Point text_offsets[] = {
+   static int alignment_adjustment[] = {
+      -5,
+      65,
+      -5,
+      65,
+   };
+   static SDL_Point text_offsets[] = {
       { gs._bounds.x  + 2, gs._bounds.y + 2 },
       { gs._bounds.x + gs._bounds.w - 2, gs._bounds.y + 2 },
       { gs._bounds.x  + 2, gs._bounds.y + gs._bounds.h - 2 },
@@ -188,19 +235,22 @@ SDLRenderer::DrawShip(int which, GameState &gs)
    for (int i = 0; i < MAX_BULLETS; i++) {
       if (ship->bullets[i].active) {
          bullet.x = ship->bullets[i].position.x - 1;
-         bullet.w = 1;
          bullet.y = ship->bullets[i].position.y - 1;
-         bullet.h = 1;
          SDL_RenderFillRect(_rend, &bullet);
       }
    }
-   // SetTextAlign(hdc, alignments[which]);
-   // sprintf(buf, "Hits: %d", ship->score);
-   // TextOutA(hdc, text_offsets[which].x, text_offsets[which].y, buf, strlen(buf));
+
+   sprintf(buf, "Hits: %d", ship->score);
+
+   SDL_Rect dst = {
+     .x = text_offsets[which].x - alignment_adjustment[which],
+     .y = text_offsets[which].y,
+   };
+   DrawText(buf, &dst, &_shipColors[which]);
 }
 
 void
-SDLRenderer::DrawConnectState(Ship& ship, PlayerConnectionInfo &info, RGB color)
+SDLRenderer::DrawConnectState(Ship& ship, PlayerConnectionInfo &info, SDL_Color* color)
 {
    char status[64];
    int progress = -1;
@@ -226,20 +276,21 @@ SDLRenderer::DrawConnectState(Ship& ship, PlayerConnectionInfo &info, RGB color)
          break;
    }
 
-   //if (*status) {
-   //   SetTextAlign(hdc, TA_TOP | TA_CENTER);
-   //   TextOutA(hdc, ship.position.x, ship.position.y + PROGRESS_TEXT_OFFSET, status, strlen(status));
-   //}
+   if (*status) {
+      SDL_Rect dst = {
+        .x = ship.position.x - 40,
+        .y = ship.position.y + PROGRESS_TEXT_OFFSET,
+      };
+      DrawText(status, &dst, color);
+   }
+
    if (progress >= 0) {
-      // SDL_SetRenderDrawColor(_rend, 0, 0, 0, SDL_ALPHA_OPAQUE);
       SDL_Rect rc = { ship.position.x - (PROGRESS_BAR_WIDTH / 2),
                       ship.position.y + PROGRESS_BAR_TOP_OFFSET,
                       PROGRESS_BAR_WIDTH / 2,
                       PROGRESS_BAR_TOP_OFFSET + PROGRESS_BAR_HEIGHT };
-
       SDL_RenderDrawRect(_rend, &rc);
       rc.w = rc.x + std::min(100, progress) * PROGRESS_BAR_WIDTH / 100;
-      //InflateRect(&rc, -1, -1);
       SDL_RenderFillRect(_rend, &rc);
    }
 }
@@ -260,19 +311,9 @@ SDLRenderer::WindowHeight()
 void
 SDLRenderer::CreateFont()
 {
-//   _font = CreateFont(-12,
-//                      0,                         // Width Of Font
-//                      0,                         // AnGDIe Of Escapement
-//                      0,                         // Orientation AnGDIe
-//                      0,                         // Font Weight
-//                      FALSE,                     // Italic
-//                      FALSE,                     // Underline
-//                      FALSE,                     // Strikeout
-//                      ANSI_CHARSET,              // Character Set Identifier
-//                      OUT_TT_PRECIS,             // Output Precision
-//                      CLIP_DEFAULT_PRECIS,       // Clipping Precision
-//                      ANTIALIASED_QUALITY,       // Output Quality
-//                      FF_DONTCARE|DEFAULT_PITCH,	// Family And Pitch
-//                      L"Tahoma");                // Font Name
-
+   _font = TTF_OpenFont("Inconsolata-Regular.ttf", 16);
+   if(!_font) {
+     printf("TTF_OpenFont: %s\n", TTF_GetError());
+     exit(1);
+   }
 }
