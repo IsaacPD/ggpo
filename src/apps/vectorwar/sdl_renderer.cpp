@@ -200,17 +200,25 @@ SDLRenderer::DrawShip(int which, GameState &gs)
       { -SHIP_RADIUS,          -SHIP_WIDTH },
       { SHIP_RADIUS,           0 },
    };
-   static int alignment_adjustment[] = {
+   const int alignment_adjustment[] = {
       -5,
       65,
       -5,
       65,
    };
-   static SDL_Point text_offsets[] = {
-      { gs._bounds.x  + 2, gs._bounds.y + 2 },
-      { gs._bounds.x + gs._bounds.w - 2, gs._bounds.y + 2 },
-      { gs._bounds.x  + 2, gs._bounds.y + gs._bounds.h - 2 },
-      { gs._bounds.x + gs._bounds.w - 2, gs._bounds.y + gs._bounds.h - 2 },
+   const SDL_Point text_offsets[] = {
+      { .x = gs._bounds.x  + 2,
+        .y = gs._bounds.y + 2
+      },
+      { .x = gs._bounds.x + gs._bounds.w - 2,
+        .y = gs._bounds.y + 2
+      },
+      { .x = gs._bounds.x  + 2,
+        .y = gs._bounds.y + gs._bounds.h - 20
+      },
+      { .x = gs._bounds.x + gs._bounds.w - 2,
+        .y = gs._bounds.y + gs._bounds.h - 20
+      }
    };
 
    char buf[32];
