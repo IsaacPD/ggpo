@@ -78,7 +78,7 @@ SDLRenderer::~SDLRenderer()
 
 void print_SDL_error(const char* loc)
 {
-	printf("SDL Error (%s): %s\n", loc, SDL_GetError());
+   printf("SDL Error (%s): %s\n", loc, SDL_GetError());
 }
 
 void
@@ -86,13 +86,13 @@ SDLRenderer::Draw(GameState &gs, NonGameState &ngs)
 {
    int ret = SDL_SetRenderDrawColor(_rend, 0, 0, 0 , SDL_ALPHA_OPAQUE);
    if (ret) {
-		 print_SDL_error("SDL_SetRenderDrawColor");
+     print_SDL_error("SDL_SetRenderDrawColor");
    }
 
-   // render clear actually uses the draw coor
+   // render clear actually uses the draw color
    ret = SDL_RenderClear(_rend);
    if (ret) {
-		 print_SDL_error("SDL_RenderClear");
+     print_SDL_error("SDL_RenderClear");
    }
 
    // FillRect(hdc, &_rc, (HBRUSH)GetStockObject(BLACK_BRUSH));

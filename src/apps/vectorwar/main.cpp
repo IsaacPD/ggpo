@@ -37,11 +37,11 @@ Syntax()
 
 int main(int argc, char* argv[])
 {
-	 char* locale = setlocale(LC_ALL, "");
-	 if (!locale) {
-		 printf("could not set locale");
-		 exit(1);
-	 }
+   char* locale = setlocale(LC_ALL, "");
+   if (!locale) {
+     printf("could not set locale");
+     exit(1);
+   }
 
 
 #if defined(WIN32)
