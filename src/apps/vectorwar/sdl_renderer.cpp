@@ -144,11 +144,10 @@ SDLRenderer::DrawText(char* text, SDL_Rect* dst, SDL_Color* color)
     return;
   }
 
-  int ret;
-  ret = SDL_SetTextureColorMod(_font,
-                         color->r,
-                         color->g,
-                         color->b);
+  int ret = SDL_SetTextureColorMod(_font,
+                                   color->r,
+                                   color->g,
+                                   color->b);
   if (ret) {
       print_SDL_error("SDL_SetTextureColorMod");
       exit(1);
