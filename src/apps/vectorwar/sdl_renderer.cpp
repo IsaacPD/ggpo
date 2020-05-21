@@ -52,12 +52,12 @@ SDLRenderer::SDLRenderer()
    // initialise the first available renderer
    _rend = SDL_CreateRenderer(_win, -1,
       SDL_RENDERER_ACCELERATED);
-	 if (!_rend) {
+   if (!_rend) {
      print_SDL_error("SDL_CreateRenderer");
-		 exit(1);
-	 }
+     exit(1);
+   }
 
-	 // depends on renderer being initialised
+   // depends on renderer being initialised
    CreateFont();
 
    *_status = '\0';
@@ -77,7 +77,6 @@ SDLRenderer::~SDLRenderer()
 {
    SDL_DestroyWindow(_win);
    SDL_DestroyRenderer(_rend);
-   TTF_Quit();
    SDL_Quit();
 }
 
@@ -87,7 +86,7 @@ SDLRenderer::Draw(GameState &gs, NonGameState &ngs)
    int ret = SDL_SetRenderDrawColor(_rend, 0, 0, 0 , SDL_ALPHA_OPAQUE);
    if (ret) {
      print_SDL_error("SDL_SetRenderDrawColor");
-		 exit(1);
+     exit(1);
    }
 
    // render clear actually uses the draw color
@@ -146,56 +145,56 @@ SDLRenderer::DrawText(char* text, SDL_Rect* dst, SDL_Color* color)
   }
 
 
-	int ret;
-	ret = SDL_SetTextureColorMod(_font,
+  int ret;
+  ret = SDL_SetTextureColorMod(_font,
                          color->r,
                          color->g,
                          color->b);
-	if (ret) {
-			print_SDL_error("SDL_SetTextureColorMod");
-			exit(1);
-	}
+  if (ret) {
+      print_SDL_error("SDL_SetTextureColorMod");
+      exit(1);
+  }
 
-	SDL_Rect src;
-
-
+  SDL_Rect src;
+  SDL_Rect ndst;
   for (int i = 0; i < text_len; i++) {
-		Glyph* glyph = NULL;
+    Glyph* glyph = NULL;
 
-		for (int j = 0; j < GLYPH_ARRAY_LEN; j++) {
-			Glyph tmp = glyphs_Arial[j];
-			if (tmp.codePoint == text[i]) {
-				glyph = &tmp;
-				break;
-			}
-		}
+    for (int j = 0; j < GLYPH_ARRAY_LEN; j++) {
+      Glyph tmp = glyphs_Arial[j];
+      if (tmp.codePoint == text[i]) {
+        glyph = &tmp;
+        break;
+      }
+    }
 
-		if (!glyph) {
-			printf("no glyph found for %s\n", text[i]);
-			break;
-		}
+    if (!glyph) {
+      printf("no glyph found for %s\n", text[i]);
+      break;
+    }
 
-		src.x = glyph->x;
-		src.y = glyph->y;
-		src.w = glyph->width;
-		src.h = glyph->height;
+    src.x = glyph->x;
+    src.y = glyph->y;
+    src.w = glyph->width;
+    src.h = glyph->height;
 
-		dst->w = glyph->width;
-		dst->h = glyph->height;
+    ndst.w = glyph->width;
+    ndst.h = glyph->height;
+    ndst.x = dst->x - glyph->originX;
+    ndst.y = dst->y - glyph->originY + 15;
 
-		printf("src, x: %d, y: %d\n", src.x, src.y);
-		printf("dst, x: %d, y: %d, w: %d, h: %d\n", dst->x, dst->y,
-				dst->w, dst->h);
+    printf(" '%c' src, x: %d, y: %d\n", text[i], src.x, src.y);
+    printf("dst, x: %d, y: %d, w: %d, h: %d\n", ndst.x, ndst.y,
+        ndst.w, ndst.h);
 
-		ret = SDL_RenderCopy(_rend, _font, &src, dst);
-		if (ret) {
-			print_SDL_error("SDL_RenderCopy");
-			exit(1);
-		}
+    ret = SDL_RenderCopy(_rend, _font, &src, &ndst);
+    if (ret) {
+      print_SDL_error("SDL_RenderCopy");
+      exit(1);
+    }
 
-		dst->x += src.w;
-		i++;
-	}
+    dst->x += src.w;
+  }
 }
 
 void
@@ -352,25 +351,13 @@ SDLRenderer::WindowHeight()
 void
 SDLRenderer::CreateFont()
 {
-   // SDL_Surface* font_surf = SDL_CreateRGBSurfaceFrom(
-   //     font_array,
-   //     181,     // width
-   //     76,      // height
-   //     32,      // depth
-   //     4 * 181, // pitch
-   //     0xff000000,
-   //     0x00ff0000,
-   //     0x0000ff00,
-   //     0x000000ff
-   //     );
-
    SDL_Surface* font_surf = SDL_CreateRGBSurfaceWithFormatFrom(
        font_array,
        181,     // width
        76,      // height
        32,      // depth
        4 * 181, // pitch
-			 SDL_PIXELFORMAT_RGBA32
+        SDL_PIXELFORMAT_RGBA32
        );
    if (!font_surf) {
      print_SDL_error("create font surface");

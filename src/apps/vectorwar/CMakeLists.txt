@@ -21,7 +21,7 @@ set_target_properties(VectorWar PROPERTIES
 # Link against GGPO, libSDL2, winmm (Windows Multimedia API), and ws2_32
 # (Winsock).
 if(WIN32 AND BUILD_SHARED_LIBS)
-	target_link_libraries(VectorWar LINK_PUBLIC GGPO SDL2 SDL2_ttf winmm, wd2_32)
+	target_link_libraries(VectorWar LINK_PUBLIC GGPO SDL2 winmm, wd2_32)
 else()
-	target_link_libraries(VectorWar LINK_PUBLIC GGPO SDL2 SDL2_ttf)
+	target_link_libraries(VectorWar LINK_PUBLIC GGPO SDL2)
 endif()
