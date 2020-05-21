@@ -144,7 +144,6 @@ SDLRenderer::DrawText(char* text, SDL_Rect* dst, SDL_Color* color)
     return;
   }
 
-
   int ret;
   ret = SDL_SetTextureColorMod(_font,
                          color->r,
@@ -158,34 +157,17 @@ SDLRenderer::DrawText(char* text, SDL_Rect* dst, SDL_Color* color)
   SDL_Rect src;
   SDL_Rect ndst;
   for (int i = 0; i < text_len; i++) {
-    Glyph* glyph = NULL;
+    Glyph glyph = glyphs_Arial[text[i]];
 
-    for (int j = 0; j < GLYPH_ARRAY_LEN; j++) {
-      Glyph tmp = glyphs_Arial[j];
-      if (tmp.codePoint == text[i]) {
-        glyph = &tmp;
-        break;
-      }
-    }
+    src.x = glyph.x;
+    src.y = glyph.y;
+    src.w = glyph.width;
+    src.h = glyph.height;
 
-    if (!glyph) {
-      printf("no glyph found for %s\n", text[i]);
-      break;
-    }
-
-    src.x = glyph->x;
-    src.y = glyph->y;
-    src.w = glyph->width;
-    src.h = glyph->height;
-
-    ndst.w = glyph->width;
-    ndst.h = glyph->height;
-    ndst.x = dst->x - glyph->originX;
-    ndst.y = dst->y - glyph->originY + 15;
-
-    printf(" '%c' src, x: %d, y: %d\n", text[i], src.x, src.y);
-    printf("dst, x: %d, y: %d, w: %d, h: %d\n", ndst.x, ndst.y,
-        ndst.w, ndst.h);
+    ndst.w = glyph.width;
+    ndst.h = glyph.height;
+    ndst.x = dst->x - glyph.originX;
+    ndst.y = dst->y - glyph.originY + 15;
 
     ret = SDL_RenderCopy(_rend, _font, &src, &ndst);
     if (ret) {

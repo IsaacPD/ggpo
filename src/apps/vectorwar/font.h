@@ -1,7 +1,5 @@
 // with thanks to https://evanw.github.io/font-texture-generator/
 
-#define GLYPH_ARRAY_LEN 95
-
 typedef struct Glyph {
   int codePoint, x, y, width, height, originX, originY;
 } Glyph;
@@ -12,7 +10,39 @@ typedef struct Font {
   Glyph *glyphs;
 } Font;
 
-static Glyph glyphs_Arial[] = {
+static Glyph glyphs_Arial[127] = {
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
+  {},
   {' ', 47, 70, 3, 3, 1, 1},
   {'!', 118, 45, 4, 14, 0, 13},
   {'"', 167, 59, 7, 6, 1, 13},
