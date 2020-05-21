@@ -1,4 +1,5 @@
 set(GGPO_EXAMPLES_VECTORWAR_INC_NOFILTER
+	"font.h"
 	"gamestate.h"
 	"sdl_renderer.h"
 	# "ggpo_perfmon.h"

@@ -2,6 +2,7 @@
 #include <math.h>
 #include <algorithm>
 
+#include "font.h"
 #include "vectorwar.h"
 #include "sdl_renderer.h"
 #include "gamestate.h"
@@ -32,6 +33,10 @@ CreateMainWindow()
    return window;
 }
 
+void print_SDL_error(const char* loc)
+{
+   printf("SDL Error (%s): %s\n", loc, SDL_GetError());
+}
 
 SDLRenderer::SDLRenderer()
 {
@@ -42,18 +47,18 @@ SDLRenderer::SDLRenderer()
       exit(1);
    }
 
-   if (TTF_Init() == -1) {
-     printf("SDL TTF_Init: %s\n", TTF_GetError());
-     exit(2);
-   }
-
-	 CreateFont();
-
    _win = CreateMainWindow();
 
    // initialise the first available renderer
    _rend = SDL_CreateRenderer(_win, -1,
       SDL_RENDERER_ACCELERATED);
+	 if (!_rend) {
+     print_SDL_error("SDL_CreateRenderer");
+		 exit(1);
+	 }
+
+	 // depends on renderer being initialised
+   CreateFont();
 
    *_status = '\0';
 
@@ -76,17 +81,13 @@ SDLRenderer::~SDLRenderer()
    SDL_Quit();
 }
 
-void print_SDL_error(const char* loc)
-{
-   printf("SDL Error (%s): %s\n", loc, SDL_GetError());
-}
-
 void
 SDLRenderer::Draw(GameState &gs, NonGameState &ngs)
 {
    int ret = SDL_SetRenderDrawColor(_rend, 0, 0, 0 , SDL_ALPHA_OPAQUE);
    if (ret) {
      print_SDL_error("SDL_SetRenderDrawColor");
+		 exit(1);
    }
 
    // render clear actually uses the draw color
@@ -138,31 +139,63 @@ SDLRenderer::DrawText(char* text, SDL_Rect* dst, SDL_Color* color)
   if (!text) {
     return;
   }
-  if (strlen(text) == 0) {
+
+  size_t text_len = strlen(text);
+  if (text_len == 0) {
     return;
   }
 
-  int ret = TTF_SizeUTF8(_font, text, &dst->w, &dst->h);
-  if (ret) {
-    printf("TTF_SizeUTF8: %s\n", TTF_GetError());
-    exit(1);
-  }
 
-  SDL_Surface* text_surface = TTF_RenderUTF8_Solid(_font, text, *color);
-  if (!text_surface) {
-    printf("TTF_RenderUTF8_Solid: %s\n", TTF_GetError());
-    exit(1);
-  }
+	int ret;
+	ret = SDL_SetTextureColorMod(_font,
+                         color->r,
+                         color->g,
+                         color->b);
+	if (ret) {
+			print_SDL_error("SDL_SetTextureColorMod");
+			exit(1);
+	}
 
-  SDL_Texture* texture = SDL_CreateTextureFromSurface(_rend, text_surface);
-  ret = SDL_RenderCopy(_rend, texture, NULL, dst);
-  if (ret) {
-    printf("SDL_RenderCopy: %s\n", TTF_GetError());
-    exit(1);
-  }
+	SDL_Rect src;
 
-  SDL_DestroyTexture(texture);
-  SDL_FreeSurface(text_surface);
+
+  for (int i = 0; i < text_len; i++) {
+		Glyph* glyph = NULL;
+
+		for (int j = 0; j < GLYPH_ARRAY_LEN; j++) {
+			Glyph tmp = glyphs_Arial[j];
+			if (tmp.codePoint == text[i]) {
+				glyph = &tmp;
+				break;
+			}
+		}
+
+		if (!glyph) {
+			printf("no glyph found for %s\n", text[i]);
+			break;
+		}
+
+		src.x = glyph->x;
+		src.y = glyph->y;
+		src.w = glyph->width;
+		src.h = glyph->height;
+
+		dst->w = glyph->width;
+		dst->h = glyph->height;
+
+		printf("src, x: %d, y: %d\n", src.x, src.y);
+		printf("dst, x: %d, y: %d, w: %d, h: %d\n", dst->x, dst->y,
+				dst->w, dst->h);
+
+		ret = SDL_RenderCopy(_rend, _font, &src, dst);
+		if (ret) {
+			print_SDL_error("SDL_RenderCopy");
+			exit(1);
+		}
+
+		dst->x += src.w;
+		i++;
+	}
 }
 
 void
@@ -319,9 +352,34 @@ SDLRenderer::WindowHeight()
 void
 SDLRenderer::CreateFont()
 {
-   _font = TTF_OpenFont("Inconsolata-Regular.ttf", 16);
+   // SDL_Surface* font_surf = SDL_CreateRGBSurfaceFrom(
+   //     font_array,
+   //     181,     // width
+   //     76,      // height
+   //     32,      // depth
+   //     4 * 181, // pitch
+   //     0xff000000,
+   //     0x00ff0000,
+   //     0x0000ff00,
+   //     0x000000ff
+   //     );
+
+   SDL_Surface* font_surf = SDL_CreateRGBSurfaceWithFormatFrom(
+       font_array,
+       181,     // width
+       76,      // height
+       32,      // depth
+       4 * 181, // pitch
+			 SDL_PIXELFORMAT_RGBA32
+       );
+   if (!font_surf) {
+     print_SDL_error("create font surface");
+     exit(1);
+   }
+
+   _font = SDL_CreateTextureFromSurface(_rend, font_surf);
    if(!_font) {
-     printf("TTF_OpenFont: %s\n", TTF_GetError());
+     print_SDL_error("create font texture");
      exit(1);
    }
 }

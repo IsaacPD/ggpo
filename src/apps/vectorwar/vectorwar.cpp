@@ -489,7 +489,6 @@ VectorWar_RunFrame(int input)
   if (GGPO_SUCCEEDED(result)) {
      result = ggpo_synchronize_input(ggpo, (void *)inputs, sizeof(int) * MAX_SHIPS, &disconnect_flags);
      if (GGPO_SUCCEEDED(result)) {
-         printf("ggpo succeeded\n");
          // inputs[0] and inputs[1] contain the inputs for p1 and p2.  Advance
          // the game by 1 frame using those inputs.
          VectorWar_AdvanceFrame(inputs, disconnect_flags);

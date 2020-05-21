@@ -30,7 +30,7 @@ protected:
    void DrawConnectState(Ship &ship, PlayerConnectionInfo &info, SDL_Color* color);
    void CreateFont();
 
-   TTF_Font       *_font;
+   SDL_Texture    *_font;
    SDL_Renderer   *_rend;
    SDL_Window     *_win;
    SDL_Rect       _rc;
