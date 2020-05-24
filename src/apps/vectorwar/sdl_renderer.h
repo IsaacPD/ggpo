@@ -3,7 +3,6 @@
 
 #include "renderer.h"
 #include "SDL2/SDL.h"
-#include "SDL2/SDL_ttf.h"
 
 /*
  * sdl_renderer.h --
