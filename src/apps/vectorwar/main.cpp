@@ -4,6 +4,10 @@
 #if defined(_DEBUG)
 #   include <crtdbg.h>
 #endif
+#if defined(WIN32)
+#include <Winsock2.h>
+#define strcasecmp _stricmp
+#endif
 #include "vectorwar.h"
 
 // #include "ggpo_perfmon.h"
@@ -20,7 +24,7 @@ RunMainLoop()
    start = next = now = GetCurrentTimeMS();
    while (1) {
       now = GetCurrentTimeMS();
-      VectorWar_Idle(std::max((uint32_t)0, next - now - 1));
+      VectorWar_Idle((std::max)((uint32_t)0, next - now - 1));
       if (now >= next) {
          input = VectorWar_RunFrame(input);
          next = now + (1000 / 60);

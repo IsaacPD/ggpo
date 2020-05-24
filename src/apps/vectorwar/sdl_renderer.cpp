@@ -64,10 +64,10 @@ SDLRenderer::SDLRenderer()
 
    SDL_GetWindowSize(_win, &_rc.w, &_rc.h);
 
-   _shipColors[0] = ((SDL_Color) {255, 0, 0});
-   _shipColors[1] = ((SDL_Color) {0, 255, 0});
-   _shipColors[2] = ((SDL_Color) {0, 0, 255});
-   _shipColors[3] = ((SDL_Color) {128, 128, 128});
+   _shipColors[0] = (SDL_Color {255, 0, 0});
+   _shipColors[1] = (SDL_Color {0, 255, 0});
+   _shipColors[2] = (SDL_Color {0, 0, 255});
+   _shipColors[3] = (SDL_Color {128, 128, 128});
 
    _white = {255, 255, 255};
 }
@@ -116,11 +116,10 @@ SDLRenderer::Draw(GameState &gs, NonGameState &ngs)
    //SetTextAlign(hdc, TA_BOTTOM | TA_CENTER);
    //TextOutA(hdc, _rc.h / 2, _rc.y + _rc.h - 32, _status, strlen(_status));
 
-   SDL_Rect dst = {
-     // more or less centered
-     .x = (_rc.w / 2) - 80,
-     .y = _rc.h - 32,
-   };
+   SDL_Rect dst;
+   // more or less centered
+   dst.x = (_rc.w / 2) - 80;
+   dst.y = _rc.h - 32;
    DrawText(_status, &dst, &_white);
 
    SDL_Color col = {192, 192, 192};
@@ -183,11 +182,11 @@ SDLRenderer::RenderChecksum(int y, NonGameState::ChecksumInfo &info, SDL_Color* 
 {
    char checksum[128];
    sprintf(checksum, "Frame: %04d  Checksum: %08x", info.framenumber, info.checksum);
-   SDL_Rect dst = {
-     // about centered
-     .x = (_rc.w / 2) - 120,
-     .y = y,
-   };
+
+   SDL_Rect dst;
+   // about centered
+   dst.x = (_rc.w / 2) - 120;
+   dst.y = y;
    DrawText(checksum, &dst, color);
 }
 
@@ -199,40 +198,31 @@ SDLRenderer::SetStatusText(const char *text)
 }
 
 void
-SDLRenderer::DrawShip(int which, GameState &gs)
+SDLRenderer::DrawShip(int which, GameState& gs)
 {
-   Ship *ship = gs._ships + which;
-   SDL_Rect bullet = {
-     .w = 1,
-     .h = 1,
-   };
-   SDL_Point shape[] = {
-      { SHIP_RADIUS,           0 },
-      { -SHIP_RADIUS,          SHIP_WIDTH },
-      { SHIP_TUCK-SHIP_RADIUS, 0 },
-      { -SHIP_RADIUS,          -SHIP_WIDTH },
-      { SHIP_RADIUS,           0 },
-   };
-   const int alignment_adjustment[] = {
-      -5,
-      65,
-      -5,
-      65,
-   };
-   const SDL_Point text_offsets[] = {
-      { .x = gs._bounds.x  + 2,
-        .y = gs._bounds.y + 2
-      },
-      { .x = gs._bounds.x + gs._bounds.w - 2,
-        .y = gs._bounds.y + 2
-      },
-      { .x = gs._bounds.x  + 2,
-        .y = gs._bounds.y + gs._bounds.h - 20
-      },
-      { .x = gs._bounds.x + gs._bounds.w - 2,
-        .y = gs._bounds.y + gs._bounds.h - 20
-      }
-   };
+    Ship* ship = gs._ships + which;
+    SDL_Rect bullet;
+    bullet.w = 1;
+    bullet.h = 1;
+
+    SDL_Point shape[] = {
+       { SHIP_RADIUS,           0 },
+       { -SHIP_RADIUS,          SHIP_WIDTH },
+       { SHIP_TUCK - SHIP_RADIUS, 0 },
+       { -SHIP_RADIUS,          -SHIP_WIDTH },
+       { SHIP_RADIUS,           0 },
+    };
+    const int alignment_adjustment[] = {
+       -5,
+       65,
+       -5,
+       65,
+    };
+    SDL_Point text_offsets[4];
+    text_offsets[0] = {gs._bounds.x + 2, gs._bounds.y + 2};
+    text_offsets[1] = {gs._bounds.x + gs._bounds.w - 2, gs._bounds.y + 2};
+    text_offsets[2] = {gs._bounds.x + 2, gs._bounds.y + gs._bounds.h - 20};
+    text_offsets[3] = {gs._bounds.x + gs._bounds.w - 2, gs._bounds.y + gs._bounds.h - 20};
 
    char buf[32];
    int i;
@@ -263,10 +253,9 @@ SDLRenderer::DrawShip(int which, GameState &gs)
 
    sprintf(buf, "Hits: %d", ship->score);
 
-   SDL_Rect dst = {
-     .x = text_offsets[which].x - alignment_adjustment[which],
-     .y = text_offsets[which].y,
-   };
+   SDL_Rect dst;
+   dst.x = text_offsets[which].x - alignment_adjustment[which];
+   dst.y = text_offsets[which].y;
    DrawText(buf, &dst, &_shipColors[which]);
 }
 
@@ -298,11 +287,10 @@ SDLRenderer::DrawConnectState(Ship& ship, PlayerConnectionInfo &info, SDL_Color*
    }
 
    if (*status) {
-      SDL_Rect dst = {
-        .x = ship.position.x - 40,
-        .y = ship.position.y + PROGRESS_TEXT_OFFSET,
-      };
-      DrawText(status, &dst, color);
+       SDL_Rect dst;
+       dst.x = ship.position.x - 40;
+       dst.y = ship.position.y + PROGRESS_TEXT_OFFSET;
+       DrawText(status, &dst, color);
    }
 
    if (progress >= 0) {
