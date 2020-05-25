@@ -95,12 +95,6 @@ SDLRenderer::Draw(GameState &gs, NonGameState &ngs)
      print_SDL_error("SDL_RenderClear");
    }
 
-   // FillRect(hdc, &_rc, (HBRUSH)GetStockObject(BLACK_BRUSH));
-   // FrameRect(hdc, &gs._bounds, (HBRUSH)GetStockObject(WHITE_BRUSH));
-
-   // SetBkMode(hdc, TRANSPARENT);
-   // SelectObject(hdc, _font);
-
    for (int i = 0; i < gs._num_ships; i++) {
       SDL_Color color = _shipColors[i];
       int ret = SDL_SetRenderDrawColor(_rend, color.r, color.g, color.b,
@@ -112,9 +106,6 @@ SDLRenderer::Draw(GameState &gs, NonGameState &ngs)
       DrawShip(i, gs);
       DrawConnectState(gs._ships[i], ngs.players[i], &_shipColors[i]);
    }
-
-   //SetTextAlign(hdc, TA_BOTTOM | TA_CENTER);
-   //TextOutA(hdc, _rc.h / 2, _rc.y + _rc.h - 32, _status, strlen(_status));
 
    SDL_Rect dst;
    // more or less centered

@@ -30,16 +30,10 @@ GameState::Init(int num_players, int width, int height)
 {
    int i, r;
 
-	 _bounds.w = width;
-	 _bounds.h = height;
-
-	 printf("window , w: %d, h: %d\n", _bounds.w, _bounds.h);
-
-   // GetClientRect(hwnd, &_bounds);
-   // InflateRect(&_bounds, -8, -8);
+   _bounds.w = width;
+   _bounds.h = height;
 
    r = height / 4;
-
    _framenumber = 0;
    _num_ships = num_players;
    for (i = 0; i < _num_ships; i++) {

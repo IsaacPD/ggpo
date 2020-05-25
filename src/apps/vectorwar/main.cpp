@@ -62,7 +62,6 @@ int main(int argc, char* argv[])
       return 1;
    }
    int offset = 1, local_player = 0;
-   //char ip_buffer[128];
 
    SDL_Point window_offsets[] = {
       { 64,  64 },   // player 1

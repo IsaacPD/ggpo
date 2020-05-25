@@ -3,7 +3,7 @@
 
 uint32_t GetProcessID()
 {
-	return GetCurrentProcessId();
+  return GetCurrentProcessId();
 }
 
 uint32_t GetCurrentTimeMS()
