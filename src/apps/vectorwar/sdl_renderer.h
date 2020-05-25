@@ -1,7 +1,8 @@
 #ifndef _GDI_RENDERER_H_
 #define _GDI_RENDERER_H_
 
-#include "renderer.h"
+#include "gamestate.h"
+#include "nongamestate.h"
 #include "SDL2/SDL.h"
 
 /*
@@ -11,7 +12,7 @@
  *
  */
 
-class SDLRenderer : public Renderer {
+class SDLRenderer {
 public:
    SDLRenderer();
    ~SDLRenderer();
