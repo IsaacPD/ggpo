@@ -37,6 +37,9 @@ protected:
    char           _status[1024];
    SDL_Color      _shipColors[4];
    SDL_Color      _white;
+
+   // used for bullets
+   SDL_Color      _yellow;
 };
 
 #endif

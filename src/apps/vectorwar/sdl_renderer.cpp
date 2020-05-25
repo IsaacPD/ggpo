@@ -69,7 +69,8 @@ SDLRenderer::SDLRenderer()
    _shipColors[2] = (SDL_Color {0, 0, 255});
    _shipColors[3] = (SDL_Color {128, 128, 128});
 
-   _white = {255, 255, 255};
+   _white  = {255, 255, 255};
+   _yellow = {255, 255, 0};
 }
 
 
@@ -193,8 +194,8 @@ SDLRenderer::DrawShip(int which, GameState& gs)
 {
     Ship* ship = gs._ships + which;
     SDL_Rect bullet;
-    bullet.w = 1;
-    bullet.h = 1;
+    bullet.w = 2;
+    bullet.h = 2;
 
     SDL_Point shape[] = {
        { SHIP_RADIUS,           0 },
@@ -234,6 +235,8 @@ SDLRenderer::DrawShip(int which, GameState& gs)
    }
    SDL_RenderDrawLines(_rend, shape, ARRAY_SIZE(shape));
 
+   int ret = SDL_SetRenderDrawColor(_rend, _yellow.r, _yellow.g, _yellow.b,
+         SDL_ALPHA_OPAQUE);
    for (int i = 0; i < MAX_BULLETS; i++) {
       if (ship->bullets[i].active) {
          bullet.x = ship->bullets[i].position.x - 1;
